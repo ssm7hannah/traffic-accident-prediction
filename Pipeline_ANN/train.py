@@ -18,7 +18,9 @@ from metric.graph import get_graph
 from torch.optim.lr_scheduler import ReduceLROnPlateau, CosineAnnealingWarmRestarts
 
 device = 'cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu'
-
+print('----------------------')
+print(f'device:{device}')
+print('----------------------')
 def train(
   model:nn.Module,
   criterion:callable,
@@ -69,9 +71,6 @@ def evaluate(
       X, y = X.to(device), y.to(device)
       output = model(X)
       total_loss += criterion(output, y).item() * len(y)
-      if metric is not None:
-        output = torch.round(output)
-        metric.update_state(output, y)
 
   total_loss = total_loss/len(data_loader.dataset)
   return total_loss 
@@ -156,7 +155,7 @@ def get_args_parser(add_help=True):
   parser.add_argument("--data-train", default="../data/train.csv", type=str, help="train dataset path")
   parser.add_argument("--data-test", default="../data/test.csv", type=str, help="test dataset path")
   parser.add_argument("--hidden-dim", default=32, type=int, help="dimension of hidden layer")
-  parser.add_argument("--device", default="cuda", type=str, help="device (Use cpu/cuda/mps)")
+  parser.add_argument("--device", default="cpu", type=str, help="device (Use cpu/cuda/mps)")
   parser.add_argument("-b", "--batch-size", default=64, type=int, help="batch size")
   parser.add_argument("--shuffle", default=True, type=bool, help="shuffle")
   parser.add_argument("--epochs", default=200, type=int, metavar="N", help="number of total epochs to run")

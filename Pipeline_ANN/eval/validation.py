@@ -2,13 +2,15 @@ import torch
 from sklearn.model_selection import KFold
 from torch.utils.data import TensorDataset, DataLoader
 from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_squared_log_error, r2_score
-import tensorflow as tf
+# import tensorflow as tf
 from tqdm.auto import tqdm
 import sys, os
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from train import train, evaluate 
 from copy import deepcopy
 from util.early_stop import EarlyStopper
+# from torchmetrics import Accuracy
+from torchmetrics.functional.classification import binary_accuracy
 from metric.rmsle import RMSLELoss, RMSELoss
 from torch.optim.lr_scheduler import ReduceLROnPlateau, CosineAnnealingWarmRestarts
 import warnings
@@ -56,16 +58,14 @@ class Validation:
       scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=20, T_mult=1, eta_min=0.00001)
 
       
-      pbar = range(epochs)
-      pbar = tqdm(pbar)
+      pbar = tqdm(range(epochs), leave=True)
       early_stopper = EarlyStopper(self.patience, self.delta)
       for j in pbar:
-        accuracy = tf.keras.metrics.Accuracy()
         loss = train(net, RMSELoss(), optimizer, dl, device)
-        loss_val = evaluate(net, RMSELoss(), dl_val, device, accuracy)
+        loss_val = evaluate(net, RMSELoss(), dl_val, device)
         scheduler.step(loss)
-        acc_val = accuracy.result().numpy()
-        pbar.set_postfix(trn_loss=loss, val_loss=loss_val, val_acc=acc_val)
+        pbar.set_postfix(trn_loss=loss, val_loss=loss_val)
+
         if early_stopper.early_stop(net,validation_loss=loss, mode=False):             
           break
 
